@@ -1,0 +1,74 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 18 14:33:24 2022
+
+@author: desmond gan 19072022 for testing data streaming from NOVA REST API
+"""
+
+Choic = input('Enter U for UAT, D for DEMO, L for Live :') #this will select the environment to connect
+if Choic == 'U':
+    print('Chosen Environment', Choic+'AT')
+if Choic == 'D':
+    print('Chosen Environment', Choic+'EMO')
+if Choic == 'L':
+    print('Chosen Environment',Choic+'IVE')
+else:
+    print('Wrong Alphabet CASE Sensitive input')
+    pass
+
+
+def authenticate():
+    """This is function to get auth token"""
+    print('Authenticating now.......')
+    import requests
+
+    if Choic == 'U':
+        parameters = {"login":'Utest01',"Password":'Efgh4321'}
+        aurl='https://nova-api.tdt.asia/api/authorize'
+        response=requests.post(aurl,parameters)
+    if Choic == 'D':
+        parameters = {"login":'mydatacan@gmail.com',"Password":'Tdt54321'}
+        aurl='https://demoapi8080.phillipnova.com.sg/api/authorize'
+        response=requests.post(aurl,parameters)
+    if Choic == 'L':
+        parameters = {"login":'ITDEMO1',"Password":'Pass8888'}
+        aurl='https://novatvapi.phillipmobile.com/api/authorize'
+        response=requests.post(aurl,parameters)
+
+
+    print(response.json())
+    auth_response_json = response.json()
+    auth_token = auth_response_json['d'[:1]] 
+    #print('token key= ',auth_token)
+    return(auth_token['access_token'])
+
+
+def stream():   #This will extract the streaming using the token from authenticate()
+    print("Streaming data now.......", authenticate())
+    import json
+    import requests
+    
+    if Choic == 'U':
+        surl = 'https://nova-api.tdt.asia/api/streaming'
+    if Choic == 'D':
+        surl = 'https://demoapi8081.phillipnova.com.sg/streaming'
+    if Choic == 'L':
+        surl = 'https://novatvapi.phillipmobile.com/api/streaming'
+
+
+    r = requests.get(surl,headers={'authorization':authenticate()}, stream=True)
+    buffer = ''
+    for line in r.iter_lines():
+        # filter out keep-alive new lines
+            if line:
+                decoded_line = line.decode('utf-8')
+                print(json.loads(decoded_line))
+                print(buffer + '\n')
+                if bytes(line) == 0:
+                    print('empty')
+    
+
+if __name__ == '__main__':
+    stream()
+
+
